@@ -71,7 +71,12 @@ app.delete("/v1/chat/:chatID", (req, res) => {
 
 app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
-  try {
+  try{
+    const model = req.body.model || process.env.REACT_APP_OPENAI_MODEL;
+    const temperature = req.body.temperature || 0.3;
+    
+    console.log("Model",model);
+    console.log("Temperature",temperature);
     let stream = req.body.stream || false;
     console.log("Stream", stream);
     console.log("Message", message);
@@ -147,8 +152,7 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
       model: model,
       messages: messages,
       max_tokens: 3000,
-      temperature: 0.3,
-      stream: false,
+      temperature: temperature,
     });
     // 
     console.log("Response", resp); 
