@@ -60,7 +60,9 @@ app.delete("/v1/chat/:chatID", (req, res) => {
 
 app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
-  try{
+  try {
+    let stream = req.body.stream || false;
+    console.log("Stream",stream);
     console.log("Message",message);
     console.log("ChatID",chatID);
     let chatEntry = null;
