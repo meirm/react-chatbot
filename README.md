@@ -1,6 +1,6 @@
 # ChatBot App
 
-A conversational AI app inspired by OpenAI's GPT-3 language model, built with Create React App.
+A conversational AI app inspired by OpenAI's ChatGPT web interface, built with Create React App.
 
 ![Screenshot](images/screenshot.png)
 
