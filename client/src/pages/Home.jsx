@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import axios from 'axios';
 import Avatar from "../components/Avatar";
 import BotResponse from "../components/BotResponse";
 import Error from "../components/Error";
