@@ -96,7 +96,7 @@ app.post("/v1/chat/completions", async (req, res) => {
     console.log("Message",message);
     console.log("ChatID",chatID);
     console.log("CustomGPT",customGPT);
-    console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
+    // console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
     let chatEntry = null;
     let chat = null;
     if (!chats.getChat(chatID)) {
@@ -105,8 +105,13 @@ app.post("/v1/chat/completions", async (req, res) => {
       chatEntry = chat.addEntry( message , null);
     }else{
       chat = chats.getChat(chatID);
+<<<<<<< HEAD
       chat.setSystemPrompt("You are a helpful assistant.");
       chatEntry = chat.addEntry(message, "");
+=======
+      chat.setSystemPrompt(customGPTSystemPrompt);
+      chatEntry = chat.addEntry(message, null);
+>>>>>>> aa4c7b0 (Add support for customGPT based on UniversalPrompts)
     }
     console.log("Chat before responding for chatID", chatID);
     console.log(chats.getChat(chatID).getMessages(true));

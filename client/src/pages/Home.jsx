@@ -15,6 +15,7 @@ const Home = () => {
   const [chatLog, setChatLog] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [err, setErr] = useState(false);
+  const [customGPT, setCustomGPT] = useState("ai");
   const [responseFromAPI, setResponseFromAPI] = useState(false);
 
   function createNewChatID(){
@@ -99,16 +100,10 @@ const Home = () => {
 
       async function callAPI() {
         try {
-          // const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
-          //   method: "POST",
-          //   headers: { "Content-Type": "application/json" },
-          //   body: JSON.stringify({ message: inputPrompt, chatID: chatID, stream: true }),
-          // });
-          // const data = await response.json();
-          const response = await axios.post("http://127.0.0.1:4000/v1/chat/completions/", {
-            message: inputPrompt,
-            chatID: chatID,
-            stream: true
+          const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: inputPrompt, chatID: chatID, customGPT: customGPT, stream: true}),
           });
           let newChatLog = chatLog;
           newChatLog.push(
@@ -211,6 +206,7 @@ const Home = () => {
         <nav>
           <div className="navItems">
             <NavContent
+              setCustomGPT={setCustomGPT}
               selectChat={selectChat}
               chatHistory={chatHistory}
               setChatLog={setChatLog}
@@ -237,6 +233,7 @@ const Home = () => {
 
       <aside className="sideMenu">
         <NavContent
+          setCustomGPT={setCustomGPT}
           selectChat={selectChat}
           chatHistory={chatHistory}
           setChatLog={setChatLog}

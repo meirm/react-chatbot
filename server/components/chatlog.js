@@ -31,6 +31,7 @@ class ChatLog {
         this.model = "llama2:chat";
         this.systemPrompt = "You are a helpful assistant.";
     }
+<<<<<<< HEAD
 
     setModel(model) {
         this.model = model;
@@ -42,6 +43,10 @@ class ChatLog {
 
     setSystemPrompt(systemPrompt) {
         this.systemPrompt = systemPrompt;
+=======
+    setSystemPrompt(newSystemPrompt) {
+        this.systemPrompt = newSystemPrompt;
+>>>>>>> aa4c7b0 (Add support for customGPT based on UniversalPrompts)
     }
 
     getSystemPrompt() {
