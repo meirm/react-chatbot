@@ -52,7 +52,7 @@ class ChatLog {
         // return as array of dict with role and content
         const messages = [];
         if (includeSystemPrompt)
-            messages.push({role: "assistant", content: this.systemPrompt});
+            messages.push({role: "system", content: this.systemPrompt});
         this.entries.map((entry) => {
             messages.push({role: "user", content: entry.getChatPrompt()});
             if (entry.getBotMessage())
