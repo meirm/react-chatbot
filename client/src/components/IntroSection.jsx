@@ -1,6 +1,5 @@
 import React from "react";
 import '../styles/IntroSection.css';
-import BotResponse from "./BotResponse";
 
 const IntroSection = () => {
   return (
