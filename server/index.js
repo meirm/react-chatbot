@@ -47,7 +47,7 @@ app.get("/", (req, res) => {
 
 app.get("/v1/customGPTs", (req, res) => {
   res.status(200).json(customGPTs);
-}
+});
 
 app.put("/v1/chat/:chatID", (req, res) => {
   const { chatID } = req.params;
@@ -82,7 +82,7 @@ app.post("/v1/chat/completions", async (req, res) => {
     console.log("Message",message);
     console.log("ChatID",chatID);
     console.log("CustomGPT",customGPT);
-    console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
+    // console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
     let chatEntry = null;
     let chat = null;
     if (!chats.getChat(chatID)) {
@@ -91,6 +91,7 @@ app.post("/v1/chat/completions", async (req, res) => {
       chatEntry = chat.addEntry( message , null);
     }else{
       chat = chats.getChat(chatID);
+      chat.setSystemPrompt(customGPTSystemPrompt);
       chatEntry = chat.addEntry(message, null);
     }
     const messages = chat.getMessages(true);
