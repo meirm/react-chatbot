@@ -30,8 +30,8 @@ class ChatLog {
         this.entries = [];
         this.systemPrompt = "You are a helpful assistant.";
     }
-    setSystemPrompt(systemPrompt) {
-        this.systemPrompt = systemPrompt;
+    setSystemPrompt(newSystemPrompt) {
+        this.systemPrompt = newSystemPrompt;
     }
 
     getSystemPrompt() {

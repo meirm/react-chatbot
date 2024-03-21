@@ -2,10 +2,12 @@ import React from "react";
 import NavLinksContainer from "./NavLinksContainer";
 import NavChatLog from "./NavChatLog";
 import NewChat from "./NewChat";
+import CustomGPT from "./CustomGPT";
 
-const NavContent = ({ selectChat, chatHistory, setChatLog, setShowMenu, setChatID }) => {
+const NavContent = ({ setCustomGPT, selectChat, chatHistory, setChatLog, setShowMenu, setChatID }) => {
   return (
     <>
+    <CustomGPT setCustomGPT={setCustomGPT} />
     <NewChat selectChat={selectChat} setChatLog={setChatLog} setShowMenu={setShowMenu} setChatID={setChatID} />
     <div className="navPromptWrapper">
       {chatHistory && chatHistory.map((chat, idx) => {
