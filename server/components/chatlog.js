@@ -64,6 +64,14 @@ class ChatLog {
         }
     }
 
+    appendToLastEntry(delta) {
+        if (this.entries.length > 0) {
+            this.entries[this.entries.length - 1].setBotMessage(
+                this.entries[this.entries.length - 1].getBotMessage() + delta
+            );
+        }
+    }
+
     getMessages(includeSystemPrompt = false){
         // return as array of dict with role and content
         const messages = [];

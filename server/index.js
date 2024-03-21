@@ -87,11 +87,11 @@ app.post("/v1/chat/completions", async (req, res) => {
     if (!chats.getChat(chatID)) {
       chat = chats.addChat(chatID, "New chat");
       chat.setSystemPrompt("You are a helpful assistant.");
-      chatEntry = chat.addEntry(message, null);
+      chatEntry = chat.addEntry(message, "");
     } else {
       chat = chats.getChat(chatID);
       chat.setSystemPrompt("You are a helpful assistant.");
-      chatEntry = chat.addEntry(message, null);
+      chatEntry = chat.addEntry(message, "");
     }
     console.log("Chat before responding for chatID", chatID);
     console.log(chats.getChat(chatID).getMessages(true));
@@ -150,61 +150,40 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
       console.log("Messages", messages);
     }
     const model = process.env.REACT_APP_OPENAI_MODEL;
-    const resp = await openai.createChatCompletion({
+    const resp =  openai.createChatCompletion({
       model: model,
       messages: messages,
       max_tokens: 3000,
       temperature: temperature,
+      stream: true,
+    }, { responseType: 'stream' });
+    resp.then((resp) => {
+      resp.data.on('data', data => {
+        const lines = data.toString().split('\n').filter(line => line.trim() !== '');
+        for (const line of lines) {
+            const message = line.replace(/^data: /, '');
+            if (message === '[DONE]') {
+                res.end();
+                return
+            }
+            const parsed = JSON.parse(message);
+            
+            console.log('Parsed', message);
+            res.write(`data: ${JSON.stringify(parsed)}\n\n`);
+            if (parsed.choices && parsed.choices[0].delta.content !== undefined) {
+              chat.appendToLastEntry(parsed.choices[0].delta.content);
+            }
+            
+            if (parsed.choices && parsed.choices[0].finish_reason === 'stop') {
+              res.end();
+              return
+          }
+        }
+    })}).catch((error) => {
+      console.log("Error", error.message);
+      res.write(JSON.stringify({error: error.message}));
     });
-    // 
-    console.log("Response", resp); 
-    chat.amendLastEntry(resp.data.choices[0].message.content);
-    const splittedMessage = resp.data.choices[0].message.content.split(" ");
-    for (let i = 0; i < splittedMessage.length - 2; i++) {
-      const data = {
-        id: "chatcmpl-" + chatID + "-" + i,
-        object: "chat.completion.chunk",
-        created: Math.floor(Date.now() / 1000),
-        model: model,
-        choices: [
-          {
-            index: 0,
-            delta: {
-              role: "assistant",
-              content: splittedMessage[i] + " ",
-            },
-            finish_reason: null,
-          },
-        ],
-      };
-
-      const jsonString = JSON.stringify(data);
-      console.log("Data", jsonString);
-      res.write(`data: ${jsonString}\n\n`);
-      // sleep for 0.1 seconds
-      (async () => await new Promise((resolve) => setTimeout(resolve, 100)))();
-    }
-    const data = {
-      id: "chatcmpl-" + chatID + "-" + splittedMessage.length - 1,
-      object: "chat.completion.chunk",
-      created: Math.floor(Date.now() / 1000),
-      model: model,
-      choices: [
-        {
-          index: 0,
-          delta: {
-            role: "assistant",
-            content: splittedMessage[splittedMessage.length - 1],
-          },
-          finish_reason: "stop",
-        },
-      ],
-    };
-    const jsonString = JSON.stringify(data);
-    console.log("Data", jsonString);
-    res.write(`data: ${jsonString}\n\n`);
-
-    res.end();
+    
   } catch (e) {
     console.log("Error", e.message);
     res.json({ message: e.message });
