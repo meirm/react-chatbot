@@ -82,15 +82,15 @@ app.delete("/v1/chat/:chatID", (req, res) => {
 
 app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
-
+  
   try{
     let stream = req.body.stream || false;
-    console.log("Stream",stream);
     const model = req.body.model || process.env.REACT_APP_OPENAI_MODEL;
     const temperature = req.body.temperature || 0.3;
     const customGPT = req.body.customGPT || process.env.REACT_APP_CUSTOM_GPT;
     const customGPTSystemPrompt = customGPTs[customGPT].prompt;
     
+    console.log("Stream",stream);
     console.log("Model",model);
     console.log("Temperature",temperature);
     console.log("Message",message);
@@ -105,13 +105,8 @@ app.post("/v1/chat/completions", async (req, res) => {
       chatEntry = chat.addEntry( message , null);
     }else{
       chat = chats.getChat(chatID);
-<<<<<<< HEAD
-      chat.setSystemPrompt("You are a helpful assistant.");
-      chatEntry = chat.addEntry(message, "");
-=======
       chat.setSystemPrompt(customGPTSystemPrompt);
       chatEntry = chat.addEntry(message, null);
->>>>>>> aa4c7b0 (Add support for customGPT based on UniversalPrompts)
     }
     console.log("Chat before responding for chatID", chatID);
     console.log(chats.getChat(chatID).getMessages(true));
