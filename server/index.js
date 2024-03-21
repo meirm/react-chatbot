@@ -102,11 +102,11 @@ app.post("/v1/chat/completions", async (req, res) => {
     if (!chats.getChat(chatID)) {
       chat = chats.addChat(chatID, "New chat");
       chat.setSystemPrompt(customGPTSystemPrompt);
-      chatEntry = chat.addEntry( message , null);
+      chatEntry = chat.addEntry( message , "");
     }else{
       chat = chats.getChat(chatID);
-      chat.setSystemPrompt(customGPTSystemPrompt);
-      chatEntry = chat.addEntry(message, null);
+      // chat.setSystemPrompt(customGPTSystemPrompt);
+      chatEntry = chat.addEntry(message, "");
     }
     console.log("Chat before responding for chatID", chatID);
     console.log(chats.getChat(chatID).getMessages(true));
