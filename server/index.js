@@ -139,6 +139,7 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
     return;
   }
   try {
+    const temperature = req.body.temperature || 0.3;
     const messages = chat.getMessages(true);
     if (messages.length < 2){
       console.log("Not enough messages in chat");
@@ -206,7 +207,7 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
     res.end();
   } catch (e) {
     console.log("Error", e.message);
-    res.status(400).json({ message: e.message });
+    res.json({ message: e.message });
   }
 });
 
