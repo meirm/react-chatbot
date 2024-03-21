@@ -107,24 +107,31 @@ const Home = () => {
             chatID: chatID,
             stream: true
           });
-          setChatLog([
-            ...chatLog,
+          let newChatLog = chatLog;
+          newChatLog.push(
             {
               chatPrompt: inputPrompt,
               botMessage: "",
-            },
-          ]);
+            })
           console.log("Response", response);
         
-          const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions/:${chatID}`);
+          const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions/${chatID}`);
 
         eventSource.onmessage = function(event) {
           const data = JSON.parse(event.data);
           console.log("Data",data);
           // we need to edit the last chatbot message to append the new chunk
-          let newChatLog = chatLog;
-          newChatLog[newChatLog.length - 1].botMessage += data.choices[0].delta.content;
-          setChatLog(newChatLog);
+          
+            if (newChatLog[newChatLog.length - 1]["botMessage"] === undefined) {
+              newChatLog[newChatLog.length - 1]["botMessage"] = "";
+            }
+            newChatLog[newChatLog.length - 1]["botMessage"] += data.choices[0].delta.content;
+            setChatLog(newChatLog);
+            if (data.choices[0].finish_reason === "stop") {
+              eventSource.close();
+            }
+          
+          
           eventSource.onerror = function(err) {
             console.error("EventSource failed:", err);
             setErr(err);

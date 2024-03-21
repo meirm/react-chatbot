@@ -58,6 +58,12 @@ class ChatLog {
         return this.entries;
     }
 
+    amendLastEntry(botMessage) {
+        if (this.entries.length > 0) {
+            this.entries[this.entries.length - 1].setBotMessage(botMessage);
+        }
+    }
+
     getMessages(includeSystemPrompt = false){
         // return as array of dict with role and content
         const messages = [];
@@ -102,7 +108,7 @@ class Chats {
          if (this.chats[chatID]) {
             return this.chats[chatID];
         }else{
-            return this.addChat(chatID, "New Chat");
+            return null;
         }
     }
     getChats() {

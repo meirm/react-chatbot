@@ -50,6 +50,10 @@ app.put("/v1/chat/:chatID", (req, res) => {
 app.get("/v1/chat/:chatID", (req, res) => {
   const { chatID } = req.params;
   const chat = chats.getChat(chatID);
+  if (!chat) {
+    res.status(404).json({ message: "Chat not found" });
+    return;
+  }
   res
     .status(200)
     .json({
@@ -83,6 +87,8 @@ app.post("/v1/chat/completions", async (req, res) => {
       chat.setSystemPrompt("You are a helpful assistant.");
       chatEntry = chat.addEntry(message, null);
     }
+    console.log("Chat before responding for chatID", chatID);
+    console.log(chats.getChat(chatID).getMessages(true));
     if (stream) {
       console.log("Streaming...");
       //res.redirect(303, `/v1/chat/completions/${chatID}`);
@@ -122,10 +128,15 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
   const { chatID } = req.params;
   console.log("Get for ChatID", chatID);
   chat = chats.getChat(chatID);
+  if (!chat) {
+    res.write(JSON.stringify({ error: "Chat not found" }));
+    return;
+  }
   try {
     const messages = chat.getMessages(true);
     if (messages.length < 2){
-      console.log("No messages in chat");
+      console.log("Not enough messages in chat");
+      console.log("Messages", messages);
       res.write(JSON.stringify({error: "No messages in chat"}));
       return;
     }else{
@@ -140,9 +151,10 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
       stream: false,
     });
     // 
-    console.log("Response", resp);  
+    console.log("Response", resp); 
+    chat.amendLastEntry(resp.data.choices[0].message.content);
     const splittedMessage = resp.data.choices[0].message.content.split(" ");
-    for (let i = 0; i < splittedMessage.length - 1; i++) {
+    for (let i = 0; i < splittedMessage.length - 2; i++) {
       const data = {
         id: "chatcmpl-" + chatID + "-" + i,
         object: "chat.completion.chunk",
@@ -178,29 +190,13 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
             role: "assistant",
             content: splittedMessage[splittedMessage.length - 1],
           },
-          finish_reason: null,
+          finish_reason: "stop",
         },
       ],
     };
     const jsonString = JSON.stringify(data);
     console.log("Data", jsonString);
     res.write(`data: ${jsonString}\n\n`);
-
-    const last_message = {
-      id: "chatcmpl-" + chatID + "-" + splittedMessage.length,
-      object: "chat.completion.chunk",
-      created: Math.floor(Date.now() / 1000),
-      model: model,
-      choices: [
-        {
-          index: 0,
-          delta: {},
-          finish_reason: "stop",
-        },
-      ],
-    };
-    const jsonStringLastMessage = JSON.stringify(last_message);
-    res.write(`data: ${jsonStringLastMessage}\n\n`);
 
     res.end();
   } catch (e) {
