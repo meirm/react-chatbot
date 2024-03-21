@@ -28,8 +28,18 @@ class ChatLog {
     constructor() {
         this.title = "New Chat";
         this.entries = [];
+        this.model = "llama2:chat";
         this.systemPrompt = "You are a helpful assistant.";
     }
+
+    setModel(model) {
+        this.model = model;
+    }
+
+    getModel() {
+        return this.model;
+    }
+
     setSystemPrompt(systemPrompt) {
         this.systemPrompt = systemPrompt;
     }
@@ -46,6 +56,20 @@ class ChatLog {
 
     getEntries() {
         return this.entries;
+    }
+
+    amendLastEntry(botMessage) {
+        if (this.entries.length > 0) {
+            this.entries[this.entries.length - 1].setBotMessage(botMessage);
+        }
+    }
+
+    appendToLastEntry(delta) {
+        if (this.entries.length > 0) {
+            this.entries[this.entries.length - 1].setBotMessage(
+                this.entries[this.entries.length - 1].getBotMessage() + delta
+            );
+        }
     }
 
     getMessages(includeSystemPrompt = false){
@@ -92,7 +116,7 @@ class Chats {
          if (this.chats[chatID]) {
             return this.chats[chatID];
         }else{
-            return this.addChat(chatID, "New Chat");
+            return null;
         }
     }
     getChats() {

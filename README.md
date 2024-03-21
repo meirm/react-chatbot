@@ -2,7 +2,7 @@
 
 A conversational AI app inspired by OpenAI's ChatGPT web interface, built with Create React App.
 
-![Screenshot](images/screenshot.png)
+![Screenshot](images/screen_recording.gif)
 
 ## Features
 
