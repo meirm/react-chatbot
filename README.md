@@ -83,7 +83,7 @@ All contributions are welcome. Feel free to open an issue or create a pull reque
 
 ## Credits
 
-Based on the original code from 
+Based on the original code from Sushant Dhimal.
 
 https://github.com/dhiant/react-chatGPT-clone.git
 
