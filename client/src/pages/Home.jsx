@@ -133,11 +133,11 @@ const Home = () => {
               setChatLog([...newChatLog]);
             }
             if (data.choices[0].finish_reason === "stop") {
+              setResponseFromAPI(false);
               eventSource.close();
             }
           }
         };
-          
           eventSource.onerror = function(err) {
             console.error("EventSource failed:", err);
             setErr(err);
