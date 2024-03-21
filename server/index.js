@@ -93,6 +93,8 @@ app.post("/v1/chat/completions", async (req, res) => {
       chat.setSystemPrompt("You are a helpful assistant.");
       chatEntry = chat.addEntry(message, null);
     }
+    console.log("Chat before responding for chatID", chatID);
+    console.log(chats.getChat(chatID).getMessages(true));
     if (stream) {
       console.log("Streaming...");
       //res.redirect(303, `/v1/chat/completions/${chatID}`);
@@ -157,7 +159,7 @@ app.get("/v1/chat/completions/:chatID",  async(req, res) => {
     console.log("Response", resp); 
     chat.amendLastEntry(resp.data.choices[0].message.content);
     const splittedMessage = resp.data.choices[0].message.content.split(" ");
-    for (let i = 0; i < splittedMessage.length - 1; i++) {
+    for (let i = 0; i < splittedMessage.length - 2; i++) {
       const data = {
         id: "chatcmpl-" + chatID + "-" + i,
         object: "chat.completion.chunk",
