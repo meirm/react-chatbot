@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from 'axios';
 import Avatar from "../components/Avatar";
 import BotResponse from "../components/BotResponse";
 import Error from "../components/Error";
@@ -59,6 +60,9 @@ const Home = () => {
     try {
       console.log("Fetching chat log for chatID:", chatID);
       const response = await fetch("http://127.0.0.1:4000/v1/chat/" + chatID);
+      if (!response.ok) {
+        return null;
+      }
       const data = await response.json();
       // we need to parse the incoming messages from [{role: "user", content: "message"}, {role: "assistant", content: "message"
       // to [{chatPrompt: "message", botMessage: "message"},...]
@@ -99,23 +103,51 @@ const Home = () => {
           const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: inputPrompt, chatID: chatID, customGPT: customGPT}),
+            body: JSON.stringify({ message: inputPrompt, chatID: chatID, customGPT: customGPT, stream: true}),
           });
-          const data = await response.json();
-          setChatLog([
-            ...chatLog,
+          let newChatLog = chatLog;
+          newChatLog.push(
             {
               chatPrompt: inputPrompt,
-              botMessage: data.botResponse,
-            },
-          ]);
+              botMessage: "",
+            })
+          setChatLog(newChatLog);
+          console.log("Response", response);
+        
+        const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions/${chatID}`);
+          
+        eventSource.onmessage = function(event) {
+          if(event.data){
+            
+            let newChatLog = chatLog;
+            const data = JSON.parse(event.data);
+            // console.log("Data",data);
+            // we need to edit the last chatbot message to append the new chunk
+            
+            if (newChatLog[newChatLog.length - 1]["botMessage"] === undefined) {
+              newChatLog[newChatLog.length - 1]["botMessage"] = "";
+            }
+            if (data.choices[0].delta.content !== undefined) {
+              newChatLog[newChatLog.length - 1]["botMessage"] += data.choices[0].delta.content;
+              // console.log("Bot message:", newChatLog[newChatLog.length - 1]["botMessage"]);
+              setChatLog([...newChatLog]);
+            }
+            if (data.choices[0].finish_reason === "stop") {
+              eventSource.close();
+            }
+          }
+        };
+          
+          eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            setErr(err);
+          };
           setErr(false);
         } catch (err) {
           setErr(err);
           console.log(err);
         }
-        //  Set responseFromAPI back to false after the fetch request is complete
-        setResponseFromAPI(false);
+        
       }
     }
 
@@ -146,7 +178,6 @@ const Home = () => {
         block: "end",
       });
     }
-
     return () => {};
   }, []);
 
