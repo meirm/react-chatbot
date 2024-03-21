@@ -1,32 +1,30 @@
 import React from "react";
+import '../styles/IntroSection.css';
 import BotResponse from "./BotResponse";
 
 const IntroSection = () => {
   return (
-    <div id="introsection">
-      <h1>
-        Introducing ChatBot
-        <BotResponse response=" - The Ultimate AI Assistant" />
-      </h1>
-      <h2>
-        A cutting-edge AI-powered app that provides instant answers to any
-        question you may have. With ChatBot, you'll never be left searching for
-        answers again. Whether you need information for school or work, or just
-        want to know the latest news, ChatBot has you covered.
-      </h2>
-      Features:
-      <ul>
-        <li>Instant answers to any question</li>
-        <li>Deep learning technology that improves with usage</li>
-        <li>Continuously Learning</li>
-        <li>User-friendly interface</li>
-        <li>Available 24/7</li>
-      </ul>
-      <p>
-        Say goodbye to endless searching and typing, and say hello to TalkBot,
-        your personal AI assistant. Try it now and see for yourself how TalkBot
-        can make your life easier.
-      </p>
+    <div class="welcome-container">
+        <h1 class="header">Welcome to Your AI Companion! 👋</h1>
+        <p>Hello there! I’m your AI Companion, powered by technology inspired by ChatGPT. I’m here to help you explore, learn, and get things done. Let’s embark on this journey together. Whether you have questions, need advice, or just want to chat, I'm here for you 24/7.</p>
+        
+        <h2 class="subheader">Here’s how we can interact:</h2>
+        <ul>
+            <li><strong>Ask me anything:</strong> From the depths of the ocean to the far reaches of space, I'm here to provide answers.</li>
+            <li><strong>Learn something new:</strong> Curious about quantum physics? Want to master a new language? I’ve got you covered.</li>
+            <li><strong>Get creative:</strong> Need help writing a story or coming up with ideas? Let’s get those creative juices flowing.</li>
+            <li><strong>Solve problems:</strong> Stuck on a math problem or need coding help? I’m your go-to solution finder.</li>
+        </ul>
+        
+        <p>To get started, simply type your question or what you're thinking about in the chat below and press enter.</p>
+        
+        <p>Your privacy and trust are important to us. All conversations are designed with your privacy in mind, ensuring a secure and confidential experience.</p>
+        
+        <div class="tip">
+            🌟 <strong>Tip:</strong> You can ask me for jokes, quizzes, or even to generate a poem on a topic of your choice. Let's make this fun and educational!
+        </div>
+        
+        <p>If you’re ready, let’s chat! What would you like to know or talk about today?</p>
     </div>
   );
 };
