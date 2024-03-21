@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from 'axios';
 import Avatar from "../components/Avatar";
 import BotResponse from "../components/BotResponse";
 import Error from "../components/Error";
@@ -95,19 +96,40 @@ const Home = () => {
 
       async function callAPI() {
         try {
-          const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: inputPrompt, chatID: chatID }),
+          // const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
+          //   method: "POST",
+          //   headers: { "Content-Type": "application/json" },
+          //   body: JSON.stringify({ message: inputPrompt, chatID: chatID, stream: true }),
+          // });
+          // const data = await response.json();
+          const response = await axios.post("http://127.0.0.1:4000/v1/chat/completions/", {
+            message: inputPrompt,
+            chatID: chatID,
+            stream: true
           });
-          const data = await response.json();
           setChatLog([
             ...chatLog,
             {
               chatPrompt: inputPrompt,
-              botMessage: data.botResponse,
+              botMessage: "",
             },
           ]);
+          console.log("Response", response);
+        
+          const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions/:${chatID}`);
+
+        eventSource.onmessage = function(event) {
+          const data = JSON.parse(event.data);
+          console.log("Data",data);
+          // we need to edit the last chatbot message to append the new chunk
+          let newChatLog = chatLog;
+          newChatLog[newChatLog.length - 1].botMessage += data.choices[0].delta.content;
+          setChatLog(newChatLog);
+          eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            setErr(err);
+          };
+        };
           setErr(false);
         } catch (err) {
           setErr(err);

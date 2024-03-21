@@ -5,17 +5,17 @@ const app = express();
 const port = 4000;
 
 const { Configuration, OpenAIApi } = require("openai");
-const {ChatEntry, ChatLog, Chats} = require("./components/chatlog");
+const { ChatEntry, ChatLog, Chats } = require("./components/chatlog");
 const configuration = {
   apiKey: process.env.REACT_APP_OPENAI_API_KEY,
   basePATH: process.env.REACT_APP_OPENAI_BASE_URL,
-}
+};
 
 const chats = new Chats();
 
 const openai = new OpenAIApi(configuration);
 
-openai.configuration.basePath = process.env.REACT_APP_OPENAI_BASE_URL ;
+openai.configuration.basePath = process.env.REACT_APP_OPENAI_BASE_URL;
 
 // adding body-parser and cors
 const bodyParser = require("body-parser");
@@ -27,13 +27,14 @@ app.use(cors());
 app.get("/", (req, res) => {
   if (chats.length() === 0) {
     res.status(200).json({});
-  }else{
+  } else {
     res.status(200).json({
-      'chats': [
-      // for each key in the chats object, return an object with the key as chatID and the value of the key as title
-      ...Object.keys(chats.getChats()).map((chatID) => {
-        return {chatID: chatID, title: chats.getChat(chatID).getTitle()}})
-      ]
+      chats: [
+        // for each key in the chats object, return an object with the key as chatID and the value of the key as title
+        ...Object.keys(chats.getChats()).map((chatID) => {
+          return { chatID: chatID, title: chats.getChat(chatID).getTitle() };
+        }),
+      ],
     });
   }
 });
@@ -49,7 +50,13 @@ app.put("/v1/chat/:chatID", (req, res) => {
 app.get("/v1/chat/:chatID", (req, res) => {
   const { chatID } = req.params;
   const chat = chats.getChat(chatID);
-  res.status(200).json({ chatID: chatID, title: chat.getTitle(), messages: chat.getMessages() });
+  res
+    .status(200)
+    .json({
+      chatID: chatID,
+      title: chat.getTitle(),
+      messages: chat.getMessages(),
+    });
 });
 
 app.delete("/v1/chat/:chatID", (req, res) => {
@@ -62,34 +69,144 @@ app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
   try {
     let stream = req.body.stream || false;
-    console.log("Stream",stream);
-    console.log("Message",message);
-    console.log("ChatID",chatID);
+    console.log("Stream", stream);
+    console.log("Message", message);
+    console.log("ChatID", chatID);
     let chatEntry = null;
     let chat = null;
     if (!chats.getChat(chatID)) {
       chat = chats.addChat(chatID, "New chat");
       chat.setSystemPrompt("You are a helpful assistant.");
-      chatEntry = chat.addEntry( message , null);
-    }else{
+      chatEntry = chat.addEntry(message, null);
+    } else {
       chat = chats.getChat(chatID);
+      chat.setSystemPrompt("You are a helpful assistant.");
       chatEntry = chat.addEntry(message, null);
     }
+    if (stream) {
+      console.log("Streaming...");
+      //res.redirect(303, `/v1/chat/completions/${chatID}`);
+      res.status(200).json({ chatID: chatID });
+    } else {
+      const messages = chat.getMessages(true);
+      const model = process.env.REACT_APP_OPENAI_MODEL;
+      const resp = await openai.createChatCompletion({
+        model: model,
+        messages: messages,
+        max_tokens: 3000,
+        temperature: 0.3,
+        stream: false,
+      });
+      if (resp.data.choices[0].message.content) {
+        chatEntry.botMessage = resp.data.choices[0].message.content;
+        res
+          .status(200)
+          .json({ botResponse: resp.data.choices[0].message.content });
+      } else {
+        res.status(200).json({ botResponse: "No response" });
+      }
+    }
+  } catch (e) {
+    console.log("Error", e.message);
+    res.status(400).json({ message: e.message });
+  }
+});
+
+app.get("/v1/chat/completions/:chatID",  async(req, res) => {
+  res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    res.write("\n\n");
+  const { chatID } = req.params;
+  console.log("Get for ChatID", chatID);
+  chat = chats.getChat(chatID);
+  try {
     const messages = chat.getMessages(true);
+    if (messages.length < 2){
+      console.log("No messages in chat");
+      res.write(JSON.stringify({error: "No messages in chat"}));
+      return;
+    }else{
+      console.log("Messages", messages);
+    }
+    const model = process.env.REACT_APP_OPENAI_MODEL;
     const resp = await openai.createChatCompletion({
-      model: process.env.REACT_APP_OPENAI_MODEL,
+      model: model,
       messages: messages,
       max_tokens: 3000,
       temperature: 0.3,
+      stream: false,
     });
-    if (resp.data.choices[0].message.content) {
-      chatEntry.botMessage = resp.data.choices[0].message.content;
+    // 
+    console.log("Response", resp);  
+    const splittedMessage = resp.data.choices[0].message.content.split(" ");
+    for (let i = 0; i < splittedMessage.length - 1; i++) {
+      const data = {
+        id: "chatcmpl-" + chatID + "-" + i,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: model,
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant",
+              content: splittedMessage[i] + " ",
+            },
+            finish_reason: null,
+          },
+        ],
+      };
+
+      const jsonString = JSON.stringify(data);
+      console.log("Data", jsonString);
+      res.write(`data: ${jsonString}\n\n`);
+      // sleep for 0.1 seconds
+      (async () => await new Promise((resolve) => setTimeout(resolve, 100)))();
     }
-    res.status(200).json({ botResponse: resp.data.choices[0].message.content });
-    } catch(e) {
-        console.log("Error",e.message)
-        res.status(400).json({message: e.message})
-    }
+    const data = {
+      id: "chatcmpl-" + chatID + "-" + splittedMessage.length - 1,
+      object: "chat.completion.chunk",
+      created: Math.floor(Date.now() / 1000),
+      model: model,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            content: splittedMessage[splittedMessage.length - 1],
+          },
+          finish_reason: null,
+        },
+      ],
+    };
+    const jsonString = JSON.stringify(data);
+    console.log("Data", jsonString);
+    res.write(`data: ${jsonString}\n\n`);
+
+    const last_message = {
+      id: "chatcmpl-" + chatID + "-" + splittedMessage.length,
+      object: "chat.completion.chunk",
+      created: Math.floor(Date.now() / 1000),
+      model: model,
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: "stop",
+        },
+      ],
+    };
+    const jsonStringLastMessage = JSON.stringify(last_message);
+    res.write(`data: ${jsonStringLastMessage}\n\n`);
+
+    res.end();
+  } catch (e) {
+    console.log("Error", e.message);
+    res.status(400).json({ message: e.message });
+  }
 });
 
 app.listen(port, () => {

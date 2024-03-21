@@ -28,8 +28,18 @@ class ChatLog {
     constructor() {
         this.title = "New Chat";
         this.entries = [];
+        this.model = "llama2:chat";
         this.systemPrompt = "You are a helpful assistant.";
     }
+
+    setModel(model) {
+        this.model = model;
+    }
+
+    getModel() {
+        return this.model;
+    }
+
     setSystemPrompt(systemPrompt) {
         this.systemPrompt = systemPrompt;
     }
