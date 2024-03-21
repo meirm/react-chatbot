@@ -60,7 +60,12 @@ app.delete("/v1/chat/:chatID", (req, res) => {
 
 app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
-  try {
+  try{
+    const model = req.body.model || process.env.REACT_APP_OPENAI_MODEL;
+    const temperature = req.body.temperature || 0.3;
+    
+    console.log("Model",model);
+    console.log("Temperature",temperature);
     let stream = req.body.stream || false;
     console.log("Stream",stream);
     console.log("Message",message);
@@ -77,10 +82,10 @@ app.post("/v1/chat/completions", async (req, res) => {
     }
     const messages = chat.getMessages(true);
     const resp = await openai.createChatCompletion({
-      model: process.env.REACT_APP_OPENAI_MODEL,
+      model: model,
       messages: messages,
       max_tokens: 3000,
-      temperature: 0.3,
+      temperature: temperature,
     });
     if (resp.data.choices[0].message.content) {
       chatEntry.botMessage = resp.data.choices[0].message.content;
