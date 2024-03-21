@@ -16,14 +16,14 @@ A conversational AI app inspired by OpenAI's GPT-3 language model, built with Cr
 
 - Node JS
 - npm
-- [Create Open AI account](https://www.openai.com/signup/)
+- [Create Open AI account](https://www.openai.com/signup/) (Optional)
 
 ## Setup
 
 1. Clone the repository
 
 ```
-git clone https://github.com/meirm/react-chatGPT-clone.git
+git clone https://github.com/meirm/react-chatbot.git
 ```
 
 2. Install client dependencies
@@ -44,12 +44,10 @@ npm install
 
 5. Environment Variable Setup
 
-- Go to server folder and create .env file in root of server folder and create a variable REACT_APP_OPENAI_API_KEY = [ Your Open AI key here ] insise .env file as
+- Go to server folder and copy file env.example to .env file in root of server folder and edit it.
+- Go to client folder and copy file env.example to .env file in root of server folder and edit it.
 
-```
-REACT_APP_OPENAI_API_KEY = [Your Open AI key here]
 
-```
 6. Configure Firebase 
 - Go to [firbase console](https://console.firebase.google.com/) & click on add project, follow the guidelines to create new firebase project
 - Once project is created you'll see the config file generated for you. If you do not find the config file, see the Project Overview section on the left panel. Just click the gear icon     which is at the right of Project Overview, there you'll see the Project Setting. 
