@@ -71,12 +71,15 @@ app.delete("/v1/chat/:chatID", (req, res) => {
 
 app.post("/v1/chat/completions", async (req, res) => {
   const { message, chatID } = req.body;
+  
   try{
+    let stream = req.body.stream || false;
     const model = req.body.model || process.env.REACT_APP_OPENAI_MODEL;
     const temperature = req.body.temperature || 0.3;
     const customGPT = req.body.customGPT || process.env.REACT_APP_CUSTOM_GPT;
     const customGPTSystemPrompt = customGPTs[customGPT].prompt;
     
+    console.log("Stream",stream);
     console.log("Model",model);
     console.log("Temperature",temperature);
     console.log("Message",message);
