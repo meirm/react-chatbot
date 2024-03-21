@@ -5,11 +5,18 @@ const app = express();
 const port = 4000;
 
 const { Configuration, OpenAIApi } = require("openai");
-const { ChatEntry, ChatLog, Chats } = require("./components/chatlog");
+const {ChatEntry, ChatLog, Chats} = require("./components/chatlog");
+const {systemPrompts, getSystemPrompts, CustomGPT} = require("./components/system_prompts");
 const configuration = {
   apiKey: process.env.REACT_APP_OPENAI_API_KEY,
   basePATH: process.env.REACT_APP_OPENAI_BASE_URL,
 };
+
+let customGPTs = {} 
+getSystemPrompts().then((prompts) => {
+  customGPTs = prompts;
+});
+
 
 const chats = new Chats();
 
@@ -37,6 +44,10 @@ app.get("/", (req, res) => {
       ],
     });
   }
+});
+
+app.get("/v1/customGPTs", (req, res) => {
+  res.status(200).json(customGPTs);
 });
 
 app.put("/v1/chat/:chatID", (req, res) => {
@@ -74,21 +85,25 @@ app.post("/v1/chat/completions", async (req, res) => {
 
   try{
     let stream = req.body.stream || false;
+    console.log("Stream",stream);
     const model = req.body.model || process.env.REACT_APP_OPENAI_MODEL;
     const temperature = req.body.temperature || 0.3;
+    const customGPT = req.body.customGPT || process.env.REACT_APP_CUSTOM_GPT;
+    const customGPTSystemPrompt = customGPTs[customGPT].prompt;
     
-    console.log("Stream",stream);
     console.log("Model",model);
     console.log("Temperature",temperature);
     console.log("Message",message);
     console.log("ChatID",chatID);
+    console.log("CustomGPT",customGPT);
+    console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
     let chatEntry = null;
     let chat = null;
     if (!chats.getChat(chatID)) {
       chat = chats.addChat(chatID, "New chat");
-      chat.setSystemPrompt("You are a helpful assistant.");
-      chatEntry = chat.addEntry(message, "");
-    } else {
+      chat.setSystemPrompt(customGPTSystemPrompt);
+      chatEntry = chat.addEntry( message , null);
+    }else{
       chat = chats.getChat(chatID);
       chat.setSystemPrompt("You are a helpful assistant.");
       chatEntry = chat.addEntry(message, "");
