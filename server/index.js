@@ -85,7 +85,7 @@ app.post("/v1/chat/completions", async (req, res) => {
     console.log("Message",message);
     console.log("ChatID",chatID);
     console.log("CustomGPT",customGPT);
-    console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
+    // console.log("CustomGPTSystemPrompt",customGPTSystemPrompt);
     let chatEntry = null;
     let chat = null;
     if (!chats.getChat(chatID)) {
