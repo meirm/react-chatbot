@@ -6,11 +6,12 @@ A conversational AI app inspired by OpenAI's ChatGPT web interface, built with C
 
 ## Features
 
-- Natural language processing and understanding
-- Context-aware responses
-- Ability to converse on a variety of topics
-- React-based front-end for easy user interaction
-- Node.js back-end for communication with the OpenAI API
+- Choose from a list of curated prompts.
+- LLM stream for real-time conversation.
+- Ollama API backend support.
+- LM Studio API backend support.
+- Option to set the model, temperature, max tokens and more.
+- Node.js back-end for communication with the OpenAI API.
 
 ## Requirements
 
