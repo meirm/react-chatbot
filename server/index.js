@@ -112,8 +112,39 @@ app.post("/v1/chat/completions", async (req, res) => {
     console.log(chats.getChat(chatID).getMessages(true));
     if (stream) {
       console.log("Streaming...");
-      //res.redirect(303, `/v1/chat/completions/${chatID}`);
-      res.status(200).json({ chatID: chatID });
+      const messages = chat.getMessages(true);
+      const model = process.env.REACT_APP_OPENAI_MODEL;
+      const resp = openai.createChatCompletion({
+        model: model,
+        messages: messages,
+        max_tokens: 3000,
+        temperature: 0.3,
+        stream: true,
+        }, { responseType: 'stream' });
+      resp.then((resp) => {
+      resp.data.on('data', data => {
+        const lines = data.toString().split('\n').filter(line => line.trim() !== '');
+        for (const line of lines) {
+          const message = line.replace(/^data: /, '');
+          if (message === '[DONE]') {
+              res.end();
+              return
+          }
+          const parsed = JSON.parse(message);
+          
+          console.log('Parsed', message);
+          res.write(`data: ${JSON.stringify(parsed)}\n\n`);
+          if (parsed.choices && parsed.choices[0].delta.content !== undefined) {
+            chat.appendToLastEntry(parsed.choices[0].delta.content);
+          }
+          
+          if (parsed.choices && parsed.choices[0].finish_reason === 'stop') {
+            res.end();
+            return
+          }
+        }
+      });
+      });
     } else {
       const messages = chat.getMessages(true);
       const model = process.env.REACT_APP_OPENAI_MODEL;
@@ -136,72 +167,6 @@ app.post("/v1/chat/completions", async (req, res) => {
   } catch (e) {
     console.log("Error", e.message);
     res.status(400).json({ message: e.message });
-  }
-});
-
-app.get("/v1/chat/completions/:chatID",  async(req, res) => {
-  res.writeHead(200, {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    });
-    res.write("\n\n");
-  const { chatID } = req.params;
-  console.log("Get for ChatID", chatID);
-  chat = chats.getChat(chatID);
-  if (!chat) {
-    res.write(JSON.stringify({ error: "Chat not found" }));
-    return;
-  }
-  try {
-    const temperature = req.body.temperature || 0.3;
-    const messages = chat.getMessages(true);
-    if (messages.length < 2){
-      console.log("Not enough messages in chat");
-      console.log("Messages", messages);
-      res.write(JSON.stringify({error: "No messages in chat"}));
-      return;
-    }else{
-      console.log("Messages", messages);
-    }
-    const model = process.env.REACT_APP_OPENAI_MODEL;
-    const resp =  openai.createChatCompletion({
-      model: model,
-      messages: messages,
-      max_tokens: 3000,
-      temperature: temperature,
-      stream: true,
-    }, { responseType: 'stream' });
-    resp.then((resp) => {
-      resp.data.on('data', data => {
-        const lines = data.toString().split('\n').filter(line => line.trim() !== '');
-        for (const line of lines) {
-            const message = line.replace(/^data: /, '');
-            if (message === '[DONE]') {
-                res.end();
-                return
-            }
-            const parsed = JSON.parse(message);
-            
-            console.log('Parsed', message);
-            res.write(`data: ${JSON.stringify(parsed)}\n\n`);
-            if (parsed.choices && parsed.choices[0].delta.content !== undefined) {
-              chat.appendToLastEntry(parsed.choices[0].delta.content);
-            }
-            
-            if (parsed.choices && parsed.choices[0].finish_reason === 'stop') {
-              res.end();
-              return
-          }
-        }
-    })}).catch((error) => {
-      console.log("Error", error.message);
-      res.write(JSON.stringify({error: error.message}));
-    });
-    
-  } catch (e) {
-    console.log("Error", e.message);
-    res.json({ message: e.message });
   }
 });
 
