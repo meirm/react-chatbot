@@ -6,6 +6,7 @@ import IntroSection from "../components/IntroSection";
 import Loading from "../components/Loading";
 import NavContent from "../components/NavContent";
 import SvgComponent from "../components/SvgComponent";
+import EventSource from "../utils/eventsource";
 
 const Home = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -99,11 +100,7 @@ const Home = () => {
 
       async function callAPI() {
         try {
-          const response = await fetch("http://127.0.0.1:4000/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: inputPrompt, chatID: chatID, customGPT: customGPT, stream: true}),
-          });
+          
           let newChatLog = chatLog;
           newChatLog.push(
             {
@@ -111,11 +108,20 @@ const Home = () => {
               botMessage: "",
             })
           setChatLog(newChatLog);
-          console.log("Response", response);
         
-        const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions/${chatID}`);
-          
-        eventSource.onmessage = function(event) {
+        const eventSource = new EventSource(`http://127.0.0.1:4000/v1/chat/completions`,{
+          method: "POST", headers:{
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: inputPrompt, chatID: chatID, customGPT: customGPT, stream: true}),
+          pollingInterval: 0,
+        });
+        
+        eventSource.addEventListener("open", () => {
+          console.log("Connection opened");
+        });
+    
+        eventSource.addEventListener("message", (event) => {
           if(event.data){
             
             let newChatLog = chatLog;
@@ -136,7 +142,7 @@ const Home = () => {
               eventSource.close();
             }
           }
-        };
+        });
           eventSource.onerror = function(err) {
             console.error("EventSource failed:", err);
             setErr(err);
